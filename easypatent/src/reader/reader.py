@@ -1,5 +1,7 @@
 import os
 import sys
+from lxml import etree
+
 
 class reader:
     def __init__(self, dir_to_read, dir_to_write):
@@ -24,11 +26,28 @@ class reader:
         Write each individual patent to its own file.
         """
         fp = open(input_file, 'r')
-        exp = re.compile("")
+        lines = []
         if not fp:
             for line in fp:
+                if line.startswith("<?xml "):
 
-        pass
+                    self.write_file(file_name, lines)
+                    lines = []
+                    lines.append(line)
+                    file_name =""
+                else:
+                    lines.append(line)
+
+    def _first(self, array, default = None):
+        for item in array:
+            return item
+        return default
+
+    def parse_xml(self, buff):
+        doc = etree.XML(buff)
+        docID = "-".join(doc.xpath('//publication-reference/document-id/*/text()'))
+        title = self._first(doc.xpath('//invention-title/text()'))
+        return [doctID, title]
 
     def write_file(self, out_file_name, out_file_data):
         """
