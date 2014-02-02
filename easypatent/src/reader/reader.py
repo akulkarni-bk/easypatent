@@ -30,8 +30,9 @@ class reader:
         if not fp:
             for line in fp:
                 if line.startswith("<?xml "):
-
-                    self.write_file(file_name, lines)
+                    [docID, title] = self.parse_xml(''.join(lines))
+                    file_name = docID
+                    self.write_file(file_name, ''.join(lines))
                     lines = []
                     lines.append(line)
                     file_name =""
