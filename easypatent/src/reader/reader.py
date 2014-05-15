@@ -1,14 +1,15 @@
 import os
 import sys
 from lxml import etree
-
+import gzip
 
 class reader:
     def __init__(self, dir_to_read, dir_to_write):
         self.inp_dir = dir_to_read
         self.out_dir = dir_to_write
+        self.load_input_directory()
 
-    def list_input_directory(self):
+    def load_input_directory(self):
         """
         Create a list of files in the input directory
         Store them in the object variable.
@@ -19,25 +20,31 @@ class reader:
                 print "No files found in the input directory: %s"%(self.inp_dir)
             else:
                 print "%d files found in the input directory."%(len(self.files_list))
+        else:
+            print "Input or Output directory not found."
+            return -1
 
-    def read_file(self, input_file):
+    def read_zip_write_xmls(self, input_file):
         """
         Read file and chunk it into multiple patent claims.
         Write each individual patent to its own file.
         """
-        fp = open(input_file, 'r')
+        filepath = os.path.join(self.inp_dir, input_file)
+        fp = gzip.open(filepath, 'rb')
         lines = []
-        if not fp:
-            for line in fp:
+        if fp:
+            ziplines = fp.read()
+            for line in ziplines:
                 if line.startswith("<?xml "):
                     [docID, title] = self.parse_xml(''.join(lines))
-                    file_name = docID
+                    file_name = docID + ".xml"
                     self.write_file(file_name, ''.join(lines))
                     lines = []
                     lines.append(line)
                     file_name =""
                 else:
                     lines.append(line)
+        fp.close()
 
     def _first(self, array, default = None):
         for item in array:
@@ -54,12 +61,25 @@ class reader:
         """
         Write the file with given name and given data.
         """
-        pass
+        filepath = os.path.join(self.out_dir, out_file_name)
+        fp = open(filepath, 'w')
+        if fp:
+            fp.writelines(out_file_data)
+        else:
+            print "Sorry could not open file %s for writing."%(filepath)
 
     def iterate_on_dirs(self):
         """
         Iterate on the list of input files and write out respective patent files with its content.
         """
-        pass
+        for f in self.files_list:
+            print "processing file %s."%(f)
+            self.read_zip_write_xmls(f)
 
 
+if __name__ == "__main__":
+    if len(sys.argv) != 4:
+        rdr = reader(sys.argv[1], sys.argv[2])
+        rdr.iterate_on_dirs()
+    else:
+        print "Command came in with : " + sys.argv
